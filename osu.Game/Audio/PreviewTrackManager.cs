@@ -28,9 +28,10 @@ namespace osu.Game.Audio
         }
 
         [BackgroundDependencyLoader]
-        private void load(AudioManager audioManager)
+        private void load(AudioManager audioManager, OsuConfigManager? config = null)
         {
-            trackStore = audioManager.GetTrackStore(new TrustedDomainOnlineStore());
+            string? customUrl = config?.Get<string>(OsuSetting.CustomApiUrl);
+            trackStore = audioManager.GetTrackStore(new TrustedDomainOnlineStore(customUrl));
         }
 
         /// <summary>

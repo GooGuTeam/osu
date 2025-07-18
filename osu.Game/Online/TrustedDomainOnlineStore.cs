@@ -9,15 +9,27 @@ namespace osu.Game.Online
 {
     public sealed class TrustedDomainOnlineStore : OnlineStore
     {
+        private readonly string? allowedHost;
+
+        public TrustedDomainOnlineStore(string? customApiUrl = null)
+        {
+            if (!string.IsNullOrEmpty(customApiUrl) && Uri.TryCreate(customApiUrl, UriKind.Absolute, out var uri))
+                allowedHost = uri.Host;
+        }
+
         protected override string GetLookupUrl(string url)
         {
-            if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) || !uri.Host.EndsWith(@".ppy.sh", StringComparison.OrdinalIgnoreCase))
-            {
-                Logger.Log($@"Blocking resource lookup from external website: {url}", LoggingTarget.Network, LogLevel.Important);
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
                 return string.Empty;
-            }
 
-            return url;
+            if (uri.Host.EndsWith(@".ppy.sh", StringComparison.OrdinalIgnoreCase))
+                return url;
+
+            if (allowedHost != null && uri.Host.EndsWith(allowedHost, StringComparison.OrdinalIgnoreCase))
+                return url;
+
+            Logger.Log($@"Blocking resource lookup from external website: {url}", LoggingTarget.Network, LogLevel.Important);
+            return string.Empty;
         }
     }
 }
